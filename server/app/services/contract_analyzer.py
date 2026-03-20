@@ -6,14 +6,22 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.models.contract import (
-    Contract, ContractStatus, AnalysisResult, DisputeFinding,
-    IssueType, Severity,
+    Contract,
+    ContractStatus,
+    AnalysisResult,
+    DisputeFinding,
+    IssueType,
+    Severity,
 )
 from app.services.ai_service import ai_service
 from app.services.rag_service import rag_service
 from app.services.email_service import email_service
 from app.utils.contract_parser import split_into_clauses
-from app.utils.prompts import SYSTEM_PROMPT, CLAUSE_ANALYSIS_PROMPT
+from app.utils.prompts import (
+    SYSTEM_PROMPT,
+    CLAUSE_ANALYSIS_PROMPT,
+    CONTRACT_SUMMARY_PROMPT,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,14 +64,18 @@ class ContractAnalyzer:
             all_findings = []
 
             for clause_text, start, end in clauses:
-                findings = await self._analyze_clause(db, analysis.id, clause_text, start, end)
+                findings = await self._analyze_clause(
+                    db, analysis.id, clause_text, start, end
+                )
                 all_findings.extend(findings)
 
             # Compute risk score
             risk_score = self._compute_risk_score(all_findings)
 
-            # Generate summary
-            summary = self._generate_summary(all_findings, risk_score)
+            # Generate AI-powered summary
+            summary = await self._generate_summary(
+                contract.title, contract.original_text, all_findings, risk_score
+            )
 
             # Update analysis result
             analysis.risk_score = risk_score
@@ -78,7 +90,9 @@ class ContractAnalyzer:
             if notify_email:
                 severity_counts = {}
                 for f in all_findings:
-                    sev = f.severity.value if hasattr(f.severity, "value") else f.severity
+                    sev = (
+                        f.severity.value if hasattr(f.severity, "value") else f.severity
+                    )
                     severity_counts[sev] = severity_counts.get(sev, 0) + 1
 
                 email_service.send_analysis_report(
@@ -128,7 +142,9 @@ class ContractAnalyzer:
             return []
 
         # Parse response
-        findings = self._parse_findings(response, analysis_id, clause_text, clause_start, clause_end)
+        findings = self._parse_findings(
+            response, analysis_id, clause_text, clause_start, clause_end
+        )
 
         # Persist findings
         for finding in findings:
@@ -163,12 +179,16 @@ class ContractAnalyzer:
             end_idx = ai_response.rfind("]")
             if start_idx != -1 and end_idx != -1:
                 try:
-                    parsed = json.loads(ai_response[start_idx:end_idx + 1])
+                    parsed = json.loads(ai_response[start_idx : end_idx + 1])
                 except json.JSONDecodeError:
-                    logger.warning(f"Could not parse AI response as JSON: {ai_response[:200]}")
+                    logger.warning(
+                        f"Could not parse AI response as JSON: {ai_response[:200]}"
+                    )
                     return []
             else:
-                logger.warning(f"No JSON array found in AI response: {ai_response[:200]}")
+                logger.warning(
+                    f"No JSON array found in AI response: {ai_response[:200]}"
+                )
                 return []
 
         if not isinstance(parsed, list):
@@ -208,43 +228,77 @@ class ContractAnalyzer:
             total += SEVERITY_WEIGHTS.get(sev, 2)
         return min(total, 100)
 
-    def _generate_summary(self, findings: list[DisputeFinding], risk_score: int) -> str:
-        if not findings:
-            return "No potential dispute issues were found in this contract."
-
-        counts = {}
-        for f in findings:
-            issue = f.issue_type.value if hasattr(f.issue_type, "value") else f.issue_type
-            counts[issue] = counts.get(issue, 0) + 1
-
-        severity_counts = {}
+    async def _generate_summary(
+        self,
+        title: str,
+        contract_text: str,
+        findings: list[DisputeFinding],
+        risk_score: int,
+    ) -> str:
+        severity_counts: dict[str, int] = {}
         for f in findings:
             sev = f.severity.value if hasattr(f.severity, "value") else f.severity
             severity_counts[sev] = severity_counts.get(sev, 0) + 1
 
-        parts = [f"Found {len(findings)} potential issue(s) with a risk score of {risk_score}/100."]
+        findings_detail = ""
+        for i, f in enumerate(findings, 1):
+            issue = (
+                f.issue_type.value if hasattr(f.issue_type, "value") else f.issue_type
+            )
+            sev = f.severity.value if hasattr(f.severity, "value") else f.severity
+            findings_detail += (
+                f"{i}. [{sev.upper()}] {issue}: {f.explanation}\n"
+                f"   Clause: {f.clause_text[:120]}...\n\n"
+            )
 
-        if severity_counts.get("high", 0) > 0:
-            parts.append(f"{severity_counts['high']} high-severity issue(s) require immediate attention.")
+        if not findings_detail:
+            findings_detail = (
+                "No specific issues were flagged by clause-level analysis."
+            )
 
-        issue_descriptions = {
-            "vague_timeframe": "vague or unspecified timeframes",
-            "ambiguous_language": "ambiguous language",
-            "undefined_term": "undefined or unclear terms",
-            "missing_quantity": "missing quantities or thresholds",
-            "unclear_obligation": "unclear obligations or responsibilities",
-            "other": "other potential issues",
-        }
+        prompt = CONTRACT_SUMMARY_PROMPT.format(
+            title=title,
+            total_issues=len(findings),
+            risk_score=risk_score,
+            high_count=severity_counts.get("high", 0),
+            medium_count=severity_counts.get("medium", 0),
+            low_count=severity_counts.get("low", 0),
+            findings_detail=findings_detail,
+            contract_excerpt=contract_text[:3000],
+        )
 
-        issue_parts = []
-        for issue_type, count in sorted(counts.items(), key=lambda x: x[1], reverse=True):
-            desc = issue_descriptions.get(issue_type, issue_type)
-            issue_parts.append(f"{count} instance(s) of {desc}")
-
-        if issue_parts:
-            parts.append("Issues include: " + "; ".join(issue_parts) + ".")
-
-        return " ".join(parts)
+        try:
+            response = await ai_service.generate(prompt, system_prompt=SYSTEM_PROMPT)
+            # Parse JSON
+            cleaned = response.strip()
+            if cleaned.startswith("```"):
+                lines = cleaned.split("\n")
+                lines = [l for l in lines if not l.strip().startswith("```")]
+                cleaned = "\n".join(lines)
+            start_idx = cleaned.find("{")
+            end_idx = cleaned.rfind("}")
+            if start_idx != -1 and end_idx != -1:
+                cleaned = cleaned[start_idx : end_idx + 1]
+            parsed = json.loads(cleaned)
+            return json.dumps(parsed)
+        except Exception as e:
+            logger.warning(f"AI summary generation failed, using fallback: {e}")
+            # Fallback summary
+            fallback = {
+                "overview": (
+                    f"Analysis found {len(findings)} potential issue(s) with a risk score of {risk_score}/100."
+                    if findings
+                    else "No significant dispute risks were identified in this contract."
+                ),
+                "strengths": ["Contract covers standard agreement sections"],
+                "concerns": [f.explanation for f in findings[:5]] if findings else [],
+                "recommendation": (
+                    "Review flagged clauses and add specific terms where ambiguity exists."
+                    if findings
+                    else "The contract appears well-drafted. Consider a legal review for additional assurance."
+                ),
+            }
+            return json.dumps(fallback)
 
 
 contract_analyzer = ContractAnalyzer()
