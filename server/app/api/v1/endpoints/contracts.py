@@ -1,10 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional
+import pdfplumber
+import io
 
 from app.core.database import get_db
 from app.core.config import settings
-from app.models.contract import Contract, ContractStatus, AnalysisResult, DisputeFinding, IssueType, Severity
+from app.models.contract import (
+    Contract,
+    ContractStatus,
+    AnalysisResult,
+    DisputeFinding,
+    IssueType,
+    Severity,
+)
 from app.schemas.contracts import (
     ContractAnalyzeRequest,
     ContractAnalyzeResponse,
@@ -49,6 +58,70 @@ async def analyze_contract(
             db=db,
             contract_id=contract.id,
             notify_email=request.user_email,
+        )
+        db.refresh(contract)
+        return ContractAnalyzeResponse(
+            id=contract.id,
+            status=contract.status,
+            message="Analysis completed successfully",
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@router.post("/upload", response_model=ContractAnalyzeResponse)
+async def upload_and_analyze(
+    file: UploadFile = File(...),
+    title: str = Form(...),
+    user_email: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file provided")
+
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+    if ext not in ("pdf", "txt"):
+        raise HTTPException(
+            status_code=400, detail="Only .pdf and .txt files are supported"
+        )
+
+    raw = await file.read()
+    if len(raw) > settings.MAX_CONTRACT_SIZE_KB * 1024:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File exceeds maximum size of {settings.MAX_CONTRACT_SIZE_KB}KB",
+        )
+
+    if ext == "pdf":
+        try:
+            with pdfplumber.open(io.BytesIO(raw)) as pdf:
+                pages = [p.extract_text() or "" for p in pdf.pages]
+            contract_text = "\n\n".join(pages).strip()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Could not parse PDF file")
+    else:
+        contract_text = raw.decode("utf-8", errors="replace")
+
+    if not contract_text:
+        raise HTTPException(
+            status_code=400, detail="No text could be extracted from the file"
+        )
+
+    contract = Contract(
+        title=title,
+        original_text=contract_text,
+        file_name=file.filename,
+        status=ContractStatus.UPLOADED,
+    )
+    db.add(contract)
+    db.commit()
+    db.refresh(contract)
+
+    try:
+        await contract_analyzer.analyze(
+            db=db,
+            contract_id=contract.id,
+            notify_email=user_email or None,
         )
         db.refresh(contract)
         return ContractAnalyzeResponse(
@@ -155,7 +228,9 @@ async def email_report(
         raise HTTPException(status_code=404, detail="No analysis results found")
 
     # Count findings by severity
-    findings = db.query(DisputeFinding).filter(DisputeFinding.analysis_id == analysis.id).all()
+    findings = (
+        db.query(DisputeFinding).filter(DisputeFinding.analysis_id == analysis.id).all()
+    )
     severity_counts = {}
     for f in findings:
         sev = f.severity.value if hasattr(f.severity, "value") else f.severity
