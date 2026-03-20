@@ -1,0 +1,37 @@
+This Software Development Agreement ("Agreement") is entered into between TechCorp Solutions ("Client") and DevTeam Inc. ("Contractor") on this date.
+
+1. SCOPE OF WORK
+
+The Contractor shall develop a web application as described in the project brief. The application should include several features that the Client may request from time to time. The Contractor will use best efforts to deliver a quality product.
+
+2. TIMELINE
+
+The project will commence in a few days after signing this Agreement. Development will proceed in phases, with each phase taking a reasonable amount of time. The Contractor shall provide progress updates periodically. The final deliverable shall be completed soon after all phases are done.
+
+3. COMPENSATION
+
+The Client shall pay the Contractor approximately $75,000 for the complete project. Payment shall be made in installments, with adequate amounts paid at each milestone. Late payments may incur some penalties.
+
+4. INTELLECTUAL PROPERTY
+
+All work product created under this Agreement shall belong to the Client. Confidential information shared between both parties shall be protected. The Contractor may retain generic knowledge and tools developed during the project.
+
+5. CHANGES AND MODIFICATIONS
+
+Changes to the project scope shall be made by mutual agreement. The Contractor may adjust timelines if significant changes are requested. Additional work will be billed at a rate to be determined later.
+
+6. TERMINATION
+
+Either party may terminate this Agreement for convenience. Upon termination, the Contractor shall be compensated for work completed. Materials and deliverables will be returned promptly.
+
+7. LIABILITY AND INDEMNIFICATION
+
+The Contractor shall indemnify the Client against all claims arising from the services. Neither party shall be liable for failure due to circumstances beyond their control. The Contractor shall maintain adequate insurance coverage.
+
+8. DISPUTE RESOLUTION
+
+Any disputes arising from this Agreement shall be resolved through appropriate channels. The parties agree to attempt to resolve disputes amicably before pursuing legal action.
+
+9. GENERAL PROVISIONS
+
+This Agreement constitutes the entire understanding between the parties. Confidentiality obligations shall survive termination of this Agreement. Notices shall be provided to the other party as needed. This Agreement shall be governed by applicable law.

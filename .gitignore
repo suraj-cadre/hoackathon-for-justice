@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+env/
+
+# Environment files (secrets)
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+client/dist/
+client/build/
+server/*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Logs
+*.log
+
+# Database
+*.db
+*.sqlite3
