@@ -65,76 +65,85 @@ export default function ContractAnalyzer() {
     !loading;
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analyze Contract</h1>
-          <p className="mt-2 text-gray-600">
-            {mode === "text"
-              ? "Paste your contract text below."
-              : "Upload a PDF or text file."}{" "}
-            The AI will identify potentially disputable clauses and suggest
-            improvements.
-          </p>
-        </div>
+    <div className="max-w-3xl mx-auto animate-fade-in">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+          Analyze Contract
+        </h1>
+        <p className="mt-2 text-slate-500">
+          {mode === "text"
+            ? "Paste your contract text below."
+            : "Upload a PDF or text file."}{" "}
+          The AI will identify potentially disputable clauses and suggest
+          improvements.
+        </p>
+      </div>
 
-        {/* Toggle */}
+      {/* Mode Toggle */}
+      <div className="bg-slate-100 rounded-xl p-1 flex mb-8">
         <button
           type="button"
           onClick={() => {
-            setMode(mode === "text" ? "upload" : "text");
+            setMode("text");
             setError(null);
           }}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shrink-0"
-          title={
-            mode === "text" ? "Switch to file upload" : "Switch to text input"
-          }
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+            mode === "text"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-500 hover:text-slate-700"
+          }`}
         >
-          {mode === "text" ? (
-            <>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                />
-              </svg>
-              Upload File
-            </>
-          ) : (
-            <>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
-              Paste Text
-            </>
-          )}
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+          Paste Text
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMode("upload");
+            setError(null);
+          }}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+            mode === "upload"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            />
+          </svg>
+          Upload File
         </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Title */}
         <div>
           <label
             htmlFor="title"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-slate-700 mb-1.5"
           >
             Contract Title
           </label>
@@ -145,15 +154,16 @@ export default function ContractAnalyzer() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g., Software Development Agreement"
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 outline-none transition-all"
           />
         </div>
 
+        {/* Text / Upload */}
         {mode === "text" ? (
           <div>
             <label
               htmlFor="contract"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-slate-700 mb-1.5"
             >
               Contract Text
             </label>
@@ -164,9 +174,9 @@ export default function ContractAnalyzer() {
               placeholder="Paste the full contract text here..."
               required
               rows={16}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+              className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 outline-none transition-all resize-y"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-400 mt-1.5">
               {contractText.length > 0
                 ? `${(contractText.length / 1024).toFixed(1)} KB`
                 : "Supports plain text contracts"}
@@ -174,7 +184,7 @@ export default function ContractAnalyzer() {
           </div>
         ) : (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
               Upload Contract File
             </label>
             <div
@@ -200,7 +210,7 @@ export default function ContractAnalyzer() {
                   } as any);
                 }
               }}
-              className="w-full border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors"
+              className="w-full border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-all duration-200"
             >
               <input
                 ref={fileInputRef}
@@ -211,50 +221,52 @@ export default function ContractAnalyzer() {
               />
               {file ? (
                 <div className="space-y-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-10 w-10 mx-auto text-blue-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <p className="text-sm font-medium text-gray-900">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-green-100 flex items-center justify-center">
+                    <svg
+                      className="w-6 h-6 text-green-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-slate-900">
                     {file.name}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-500">
                     {(file.size / 1024).toFixed(1)} KB
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-10 w-10 mx-auto text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                    />
-                  </svg>
-                  <p className="text-sm text-gray-600">
-                    <span className="text-blue-600 font-medium">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-slate-100 flex items-center justify-center">
+                    <svg
+                      className="w-6 h-6 text-slate-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                      />
+                    </svg>
+                  </div>
+                  <p className="text-sm text-slate-600">
+                    <span className="text-primary-600 font-medium">
                       Click to browse
                     </span>{" "}
                     or drag and drop
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-slate-400">
                     PDF or TXT (max 500KB)
                   </p>
                 </div>
@@ -263,12 +275,14 @@ export default function ContractAnalyzer() {
           </div>
         )}
 
+        {/* Email */}
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-slate-700 mb-1.5"
           >
-            Email for Report (optional)
+            Email for Report{" "}
+            <span className="text-slate-400 font-normal">(optional)</span>
           </label>
           <input
             id="email"
@@ -276,20 +290,35 @@ export default function ContractAnalyzer() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 outline-none transition-all"
           />
         </div>
 
+        {/* Error */}
         {error && (
-          <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg border border-red-200">
+          <div className="flex items-start gap-3 bg-red-50 text-red-700 px-4 py-3 rounded-xl border border-red-200 text-sm">
+            <svg
+              className="w-5 h-5 text-red-400 shrink-0 mt-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+              />
+            </svg>
             {error}
           </div>
         )}
 
+        {/* Submit */}
         <button
           type="submit"
           disabled={!canSubmit}
-          className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full bg-primary-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-primary-700 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary-600/20 disabled:shadow-none"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -309,7 +338,7 @@ export default function ContractAnalyzer() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              Analyzing...
+              Analyzing…
             </span>
           ) : (
             "Analyze Contract"

@@ -21,7 +21,6 @@ function parseSummary(
     const parsed = JSON.parse(raw);
     if (parsed.overview) return parsed as StructuredSummary;
   } catch {
-    // Legacy plain-text summary — wrap it
     return {
       overview: raw,
       strengths: [],
@@ -86,16 +85,34 @@ export default function AnalysisResults() {
   if (loading)
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+        <div className="animate-spin h-8 w-8 border-4 border-primary-500 border-t-transparent rounded-full" />
       </div>
     );
 
   if (error)
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>
-        <Link to="/analyze" className="text-blue-600 mt-4 inline-block">
-          ← Back to Analyzer
+      <div className="max-w-3xl mx-auto animate-fade-in">
+        <div className="bg-red-50 text-red-700 p-4 rounded-xl border border-red-200">
+          {error}
+        </div>
+        <Link
+          to="/analyze"
+          className="text-primary-600 mt-4 inline-flex items-center gap-1 text-sm font-medium hover:underline"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+            />
+          </svg>
+          Back to Analyzer
         </Link>
       </div>
     );
@@ -110,38 +127,68 @@ export default function AnalysisResults() {
         : "low";
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-4xl mx-auto animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Link to="/history" className="text-blue-600 text-sm hover:underline">
-            ← All Contracts
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900 mt-1">
-            {data.title}
-          </h1>
-          <p className="text-sm text-gray-500">
-            Status: {data.status} | Analyzed:{" "}
-            {analysis ? new Date(analysis.created_at).toLocaleString() : "N/A"}
-          </p>
+      <div className="mb-8">
+        <Link
+          to="/history"
+          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-primary-600 transition-colors mb-3"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+            />
+          </svg>
+          All Contracts
+        </Link>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+          {data.title}
+        </h1>
+        <div className="flex items-center gap-3 mt-2">
+          <span
+            className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+              data.status === "analyzed"
+                ? "bg-green-100 text-green-700"
+                : data.status === "analyzing"
+                  ? "bg-primary-100 text-primary-700"
+                  : data.status === "failed"
+                    ? "bg-red-100 text-red-700"
+                    : "bg-slate-100 text-slate-700"
+            }`}
+          >
+            {data.status}
+          </span>
+          {analysis && (
+            <span className="text-sm text-slate-400">
+              {new Date(analysis.created_at).toLocaleString()}
+            </span>
+          )}
         </div>
       </div>
 
       {analysis && (
-        <>
+        <div className="space-y-6">
           {/* Overview Card */}
           {summary && (
             <div
-              className={`rounded-xl border-2 p-6 mb-6 ${
+              className={`rounded-2xl border p-6 ${
                 riskLevel === "high"
-                  ? "bg-red-50 border-red-200"
+                  ? "bg-red-50/60 border-red-200"
                   : riskLevel === "medium"
-                    ? "bg-amber-50 border-amber-200"
-                    : "bg-green-50 border-green-200"
+                    ? "bg-amber-50/60 border-amber-200"
+                    : "bg-green-50/60 border-green-200"
               }`}
             >
               <p
-                className={`text-base font-medium ${
+                className={`text-base leading-relaxed ${
                   riskLevel === "high"
                     ? "text-red-900"
                     : riskLevel === "medium"
@@ -161,56 +208,80 @@ export default function AnalysisResults() {
                         : "text-green-700"
                   }`}
                 >
-                  💡 {summary.recommendation}
+                  {summary.recommendation}
                 </p>
               )}
             </div>
           )}
 
           {/* Score + Counts Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <RiskScoreGauge score={analysis.risk_score} />
 
-            <div className="bg-white rounded-xl border p-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-3">
-                Issues by Severity
+            <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                By Severity
               </h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-red-600 font-medium">High</span>
-                  <span className="font-bold">{severityCounts.high || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-amber-600 font-medium">Medium</span>
-                  <span className="font-bold">
-                    {severityCounts.medium || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-green-600 font-medium">Low</span>
-                  <span className="font-bold">{severityCounts.low || 0}</span>
-                </div>
+              <div className="space-y-3">
+                {[
+                  {
+                    label: "High",
+                    count: severityCounts.high || 0,
+                    color: "text-red-600",
+                    dot: "bg-red-500",
+                  },
+                  {
+                    label: "Medium",
+                    count: severityCounts.medium || 0,
+                    color: "text-amber-600",
+                    dot: "bg-amber-500",
+                  },
+                  {
+                    label: "Low",
+                    count: severityCounts.low || 0,
+                    color: "text-green-600",
+                    dot: "bg-green-500",
+                  },
+                ].map((s) => (
+                  <div
+                    key={s.label}
+                    className="flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-2 text-sm text-slate-700">
+                      <span className={`w-2 h-2 rounded-full ${s.dot}`} />
+                      {s.label}
+                    </span>
+                    <span className={`text-lg font-bold ${s.color}`}>
+                      {s.count}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border p-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-3">
-                Issues by Type
+            <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                By Type
               </h3>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {Object.entries(issueTypeCounts).length > 0 ? (
                   Object.entries(issueTypeCounts).map(([type, count]) => (
-                    <div key={type} className="flex justify-between text-sm">
-                      <span className="text-gray-700">
+                    <div
+                      key={type}
+                      className="flex justify-between items-center text-sm"
+                    >
+                      <span className="text-slate-600">
                         {ISSUE_TYPE_LABELS[
                           type as keyof typeof ISSUE_TYPE_LABELS
                         ] || type}
                       </span>
-                      <span className="font-semibold">{count}</span>
+                      <span className="font-semibold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md text-xs">
+                        {count}
+                      </span>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-400">No issues detected</p>
+                  <p className="text-sm text-slate-400">No issues detected</p>
                 )}
               </div>
             </div>
@@ -219,14 +290,12 @@ export default function AnalysisResults() {
           {/* Strengths & Concerns */}
           {summary &&
             (summary.strengths.length > 0 || summary.concerns.length > 0) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {/* Strengths */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {summary.strengths.length > 0 && (
-                  <div className="bg-white rounded-xl border border-green-200 p-6">
+                  <div className="bg-white rounded-2xl border border-green-200/80 p-6 shadow-sm">
                     <h3 className="text-sm font-semibold text-green-700 mb-3 flex items-center gap-2">
                       <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
+                        className="h-4 w-4"
                         viewBox="0 0 20 20"
                         fill="currentColor"
                       >
@@ -236,16 +305,16 @@ export default function AnalysisResults() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      Contract Strengths
+                      Strengths
                     </h3>
                     <ul className="space-y-2">
                       {summary.strengths.map((s, i) => (
                         <li
                           key={i}
-                          className="flex items-start gap-2 text-sm text-gray-700"
+                          className="flex items-start gap-2 text-sm text-slate-700"
                         >
                           <span className="text-green-500 mt-0.5 shrink-0">
-                            ✓
+                            &#10003;
                           </span>
                           {s}
                         </li>
@@ -253,14 +322,11 @@ export default function AnalysisResults() {
                     </ul>
                   </div>
                 )}
-
-                {/* Concerns */}
                 {summary.concerns.length > 0 && (
-                  <div className="bg-white rounded-xl border border-red-200 p-6">
+                  <div className="bg-white rounded-2xl border border-red-200/80 p-6 shadow-sm">
                     <h3 className="text-sm font-semibold text-red-700 mb-3 flex items-center gap-2">
                       <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
+                        className="h-4 w-4"
                         viewBox="0 0 20 20"
                         fill="currentColor"
                       >
@@ -270,16 +336,16 @@ export default function AnalysisResults() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      Key Concerns
+                      Concerns
                     </h3>
                     <ul className="space-y-2">
                       {summary.concerns.map((c, i) => (
                         <li
                           key={i}
-                          className="flex items-start gap-2 text-sm text-gray-700"
+                          className="flex items-start gap-2 text-sm text-slate-700"
                         >
-                          <span className="text-red-500 mt-0.5 shrink-0">
-                            ⚠
+                          <span className="text-red-400 mt-0.5 shrink-0">
+                            !
                           </span>
                           {c}
                         </li>
@@ -294,75 +360,82 @@ export default function AnalysisResults() {
           {summary &&
             summary.concerns.length === 0 &&
             findings.length === 0 && (
-              <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-6 text-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-12 w-12 mx-auto text-green-500 mb-3"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
+              <div className="bg-green-50/60 border border-green-200 rounded-2xl p-8 text-center">
+                <div className="w-14 h-14 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-4">
+                  <svg
+                    className="w-7 h-7 text-green-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+                    />
+                  </svg>
+                </div>
                 <h3 className="text-lg font-semibold text-green-800">
                   Contract Looks Good
                 </h3>
-                <p className="text-sm text-green-700 mt-1">
-                  No significant risks or ambiguities were detected in this
-                  contract.
+                <p className="text-sm text-green-600 mt-1">
+                  No significant risks or ambiguities were detected.
                 </p>
               </div>
             )}
 
           {/* Findings */}
           {findings.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Detailed Findings ({findings.length})
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                Detailed Findings
+                <span className="ml-2 text-sm font-normal text-slate-400">
+                  ({findings.length})
+                </span>
               </h2>
-              {findings.map((finding) => (
-                <FindingCard key={finding.id} finding={finding} />
-              ))}
+              <div className="space-y-3">
+                {findings.map((finding) => (
+                  <FindingCard key={finding.id} finding={finding} />
+                ))}
+              </div>
             </div>
           )}
 
           {/* Model info */}
           {analysis.analysis_duration_ms && (
-            <p className="text-xs text-gray-400 mb-4">
-              Model: {analysis.model_used} | Duration:{" "}
+            <p className="text-xs text-slate-400">
+              Model: {analysis.model_used} &middot; Duration:{" "}
               {(analysis.analysis_duration_ms / 1000).toFixed(1)}s
             </p>
           )}
 
           {/* Email report */}
-          <div className="bg-gray-50 rounded-lg border p-4 mb-6">
-            <h3 className="font-medium text-gray-700 mb-2">Email Report</h3>
+          <div className="bg-white rounded-2xl border border-slate-200/60 p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">
+              Email Report
+            </h3>
             <div className="flex gap-2">
               <input
                 type="email"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
                 placeholder="you@example.com"
-                className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                className="flex-1 px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 outline-none transition-all"
               />
               <button
                 onClick={handleEmailReport}
                 disabled={!emailInput}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+                className="px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 disabled:opacity-40 transition-all"
               >
                 Send
               </button>
             </div>
             {emailStatus && (
-              <p className="text-sm mt-2 text-gray-600">{emailStatus}</p>
+              <p className="text-sm mt-2 text-slate-500">{emailStatus}</p>
             )}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

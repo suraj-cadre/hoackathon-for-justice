@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { healthApi } from '../api/contracts';
+import { useEffect, useState } from "react";
+import { healthApi } from "../api/contracts";
 
 export default function HealthCheck() {
   const [live, setLive] = useState<any>(null);
@@ -16,7 +16,7 @@ export default function HealthCheck() {
       setLive(liveRes.data);
       setReady(readyRes.data);
     } catch (err: any) {
-      setError(err.message || 'Cannot reach backend');
+      setError(err.message || "Cannot reach backend");
     }
   };
 
@@ -25,42 +25,54 @@ export default function HealthCheck() {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">System Health</h1>
+    <div className="max-w-2xl mx-auto animate-fade-in">
+      <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-6">
+        System Health
+      </h1>
 
       {error && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-4">
+        <div className="bg-red-50 text-red-700 p-4 rounded-xl border border-red-200 mb-6 text-sm">
           Backend unreachable: {error}
         </div>
       )}
 
       <div className="space-y-4">
-        <div className="bg-white border rounded-lg p-4">
-          <h2 className="font-semibold text-gray-700 mb-2">Liveness</h2>
+        <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${live ? "bg-green-500" : "bg-slate-300"}`}
+            />
+            <h2 className="text-sm font-semibold text-slate-700">Liveness</h2>
+          </div>
           {live ? (
-            <pre className="text-sm bg-gray-50 p-3 rounded">
+            <pre className="text-xs bg-slate-50 p-4 rounded-xl text-slate-600 overflow-x-auto">
               {JSON.stringify(live, null, 2)}
             </pre>
           ) : (
-            <p className="text-gray-500">Checking...</p>
+            <p className="text-sm text-slate-400">Checking...</p>
           )}
         </div>
 
-        <div className="bg-white border rounded-lg p-4">
-          <h2 className="font-semibold text-gray-700 mb-2">Readiness</h2>
+        <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${ready ? "bg-green-500" : "bg-slate-300"}`}
+            />
+            <h2 className="text-sm font-semibold text-slate-700">Readiness</h2>
+          </div>
           {ready ? (
-            <pre className="text-sm bg-gray-50 p-3 rounded">
+            <pre className="text-xs bg-slate-50 p-4 rounded-xl text-slate-600 overflow-x-auto">
               {JSON.stringify(ready, null, 2)}
             </pre>
           ) : (
-            <p className="text-gray-500">Checking...</p>
+            <p className="text-sm text-slate-400">Checking...</p>
           )}
         </div>
       </div>
 
       <button
         onClick={checkHealth}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+        className="mt-6 px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 active:scale-[0.98] transition-all"
       >
         Refresh
       </button>
