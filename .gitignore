@@ -15,6 +15,7 @@ env/
 # Build outputs
 client/dist/
 client/build/
+server/static/
 server/*.egg-info/
 
 # IDE

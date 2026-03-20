@@ -1,6 +1,9 @@
+import pathlib
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.api.v1.endpoints import health, contracts
@@ -23,6 +26,22 @@ app.add_middleware(
 # Routers
 app.include_router(health.router)
 app.include_router(contracts.router, prefix="/api/v1")
+
+# --- Serve the React frontend build ---
+STATIC_DIR = pathlib.Path(__file__).resolve().parent.parent / "static"
+
+if STATIC_DIR.is_dir():
+    app.mount(
+        "/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="static-assets"
+    )
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        """Serve index.html for any route not matched by the API."""
+        file = STATIC_DIR / full_path
+        if file.is_file():
+            return FileResponse(file)
+        return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.exception_handler(Exception)
