@@ -22,13 +22,10 @@ class Settings(BaseSettings):
     SES_SENDER_EMAIL: str = "Cadre ODR <no-reply@cadreodr.com>"
     SES_REPLY_TO_EMAIL: str = "Cadre ODR <no-reply@cadreodr.com>"
 
-    # Ollama
-    OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_CHAT_MODEL: str = "mistral"
-    OLLAMA_EMBED_MODEL: str = "nomic-embed-text"
-
-    # OpenAI (optional fallback)
-    OPENAI_API_KEY: Optional[str] = None
+    # OpenAI
+    OPENAI_API_KEY: str = ""
+    OPENAI_CHAT_MODEL: str = "gpt-3.5-turbo"
+    OPENAI_EMBED_MODEL: str = "text-embedding-3-small"
 
     # Contract Analyzer
     MAX_CONTRACT_SIZE_KB: int = 500

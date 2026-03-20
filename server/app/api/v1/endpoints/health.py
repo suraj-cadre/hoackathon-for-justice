@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-import httpx
 
 from app.core.database import get_db
 from app.core.config import settings
@@ -16,7 +15,7 @@ async def liveness():
 
 @router.get("/health/ready")
 async def readiness(db: Session = Depends(get_db)):
-    checks = {"db": False, "ollama": False}
+    checks = {"db": False, "openai": False}
 
     # Check database
     try:
@@ -25,13 +24,8 @@ async def readiness(db: Session = Depends(get_db)):
     except Exception:
         checks["db"] = False
 
-    # Check Ollama (non-blocking, optional)
-    try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
-            resp = await client.get(f"{settings.OLLAMA_BASE_URL}/api/tags")
-            checks["ollama"] = resp.status_code == 200
-    except Exception:
-        checks["ollama"] = False
+    # Check OpenAI key is configured
+    checks["openai"] = bool(settings.OPENAI_API_KEY)
 
-    status = "ready" if checks["db"] else "degraded"
+    status = "ready" if checks["db"] and checks["openai"] else "degraded"
     return {"status": status, "checks": checks}

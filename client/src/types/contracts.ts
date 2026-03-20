@@ -1,14 +1,15 @@
-export type ContractStatus = 'uploaded' | 'analyzing' | 'analyzed' | 'failed';
+export type ContractStatus = "uploaded" | "analyzing" | "analyzed" | "failed";
 
 export type IssueType =
-  | 'ambiguous_language'
-  | 'vague_timeframe'
-  | 'undefined_term'
-  | 'missing_quantity'
-  | 'unclear_obligation'
-  | 'other';
+  | "ambiguous_language"
+  | "vague_timeframe"
+  | "undefined_term"
+  | "missing_quantity"
+  | "unclear_obligation"
+  | "missing_clause"
+  | "other";
 
-export type Severity = 'low' | 'medium' | 'high';
+export type Severity = "low" | "medium" | "high";
 
 export interface ContractAnalyzeRequest {
   title: string;
@@ -67,16 +68,17 @@ export interface PaginatedFindings {
 }
 
 export const ISSUE_TYPE_LABELS: Record<IssueType, string> = {
-  ambiguous_language: 'Ambiguous Language',
-  vague_timeframe: 'Vague Timeframe',
-  undefined_term: 'Undefined Term',
-  missing_quantity: 'Missing Quantity',
-  unclear_obligation: 'Unclear Obligation',
-  other: 'Other',
+  ambiguous_language: "Ambiguous Language",
+  vague_timeframe: "Vague Timeframe",
+  undefined_term: "Undefined Term",
+  missing_quantity: "Missing Quantity",
+  unclear_obligation: "Unclear Obligation",
+  missing_clause: "Missing Clause",
+  other: "Other",
 };
 
 export const SEVERITY_COLORS: Record<Severity, string> = {
-  high: 'text-red-600 bg-red-50 border-red-200',
-  medium: 'text-amber-600 bg-amber-50 border-amber-200',
-  low: 'text-green-600 bg-green-50 border-green-200',
+  high: "text-red-600 bg-red-50 border-red-200",
+  medium: "text-amber-600 bg-amber-50 border-amber-200",
+  low: "text-green-600 bg-green-50 border-green-200",
 };

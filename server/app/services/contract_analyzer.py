@@ -21,6 +21,7 @@ from app.utils.prompts import (
     SYSTEM_PROMPT,
     CLAUSE_ANALYSIS_PROMPT,
     CONTRACT_SUMMARY_PROMPT,
+    MISSING_CLAUSES_PROMPT,
 )
 
 logger = logging.getLogger(__name__)
@@ -68,6 +69,12 @@ class ContractAnalyzer:
                     db, analysis.id, clause_text, start, end
                 )
                 all_findings.extend(findings)
+
+            # Analyze whole contract for missing clauses
+            missing_findings = await self._analyze_missing_clauses(
+                db, analysis.id, contract.original_text
+            )
+            all_findings.extend(missing_findings)
 
             # Compute risk score
             risk_score = self._compute_risk_score(all_findings)
@@ -147,6 +154,33 @@ class ContractAnalyzer:
         )
 
         # Persist findings
+        for finding in findings:
+            db.add(finding)
+        db.commit()
+
+        return findings
+
+    async def _analyze_missing_clauses(
+        self,
+        db: Session,
+        analysis_id: int,
+        contract_text: str,
+    ) -> list[DisputeFinding]:
+        """Analyze the whole contract for missing essential clauses."""
+        prompt = MISSING_CLAUSES_PROMPT.format(
+            contract_text=contract_text[:5000],
+        )
+
+        try:
+            response = await ai_service.generate(prompt, system_prompt=SYSTEM_PROMPT)
+        except Exception as e:
+            logger.error(f"AI generation failed for missing clauses analysis: {e}")
+            return []
+
+        findings = self._parse_findings(
+            response, analysis_id, "[Whole Contract — Missing Clause]", 0, 0
+        )
+
         for finding in findings:
             db.add(finding)
         db.commit()
